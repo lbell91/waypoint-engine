@@ -1,14 +1,19 @@
-// Root build.gradle.kts
 plugins {
-    kotlin("jvm") version "2.0.0" apply false
 }
 
 allprojects {
+    group = "com.lbell91.waypoint"
+    version = "0.1.0-SNAPSHOT"
     repositories {
         mavenCentral()
     }
 }
 
 subprojects {
-    apply(plugin = "org.jetbrains.kotlin.jvm")
+}
+
+tasks.register("ci") {
+    group = "verification"
+    description = "Runs all checks in all subprojects."
+    dependsOn(subprojects.map { "${it.path}:build" })
 }
