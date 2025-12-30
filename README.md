@@ -8,7 +8,6 @@ It focuses on durability, observability, and build-time safety rather than distr
 - Gradle Wrapper (included)
 
 ## Project Structure
-- `waypoint-api` — Public workflow contracts (states, events, actions)
 - `waypoint-core` — State machine engine and execution logic
 - `waypoint-persist` — Persistence abstractions and implementations
 - `build-logic` — Gradle convention plugins and build standards
