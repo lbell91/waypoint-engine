@@ -1,5 +1,14 @@
 package com.lbell91.api.model;
 
-public class WorkflowId {
-    
+public record WorkflowId(String value) {
+    public WorkflowId {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("WorkflowId cannot be null or blank");
+        }
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
 }
