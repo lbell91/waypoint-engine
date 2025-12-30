@@ -18,6 +18,10 @@ public class StateMachineEngine<S, E, C> {
         Objects.requireNonNull(workflowDefinition);
         Objects.requireNonNull(currentState);
         Objects.requireNonNull(event);
+        
+        if (workflowDefinition.terminatingStates().contains(currentState)) {
+            throw new IllegalStateException("Cannot apply event to terminating state: " + currentState);
+        }
 
         var key = new StateEventKey<>(currentState, event);
         var result = workflowDefinition.transitionsTable().get(key);

@@ -23,6 +23,11 @@ public final class WorkflowValidator {
             workflowDefinition.transitionsTable().forEach((key, result) -> {
                 if (key == null) errors.add(ValidationError.of(ValidationErrorType.WF_TERMINATING_STATES_IS_NULL));
                 if (result == null) errors.add(ValidationError.of(ValidationErrorType.WF_TRANSITIONS_TABLE_IS_NULL));
+                if (key != null && workflowDefinition.terminatingStates() != null &&
+                    workflowDefinition.terminatingStates().contains(key.state())) {
+                    errors.add(ValidationError.of(ValidationErrorType.WF_TERMINATING_STATE_HAS_OUTGOING_TRANSITIONS));
+                }
+            
             });
         }
 

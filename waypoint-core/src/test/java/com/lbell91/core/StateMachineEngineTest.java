@@ -53,4 +53,27 @@ public class StateMachineEngineTest {
         var result = engine.applyResult(workflowDefinition, State.START, Event.GO, new Context("test"));
         assert result.nextState().equals(State.MIDDLE);
     }
+
+    @Test
+    void apply_event_on_terminating_state_should_throw() {
+        var transitions = Map.of(
+            new StateEventKey<>(State.START, Event.GO), new TransitionResult<>(State.MIDDLE),
+            new StateEventKey<>(State.MIDDLE, Event.GO), new TransitionResult<>(State.END)
+        );
+        var workflowDefinition = new WorkflowDefinition<State,Event,Context>() {
+            @Override public WorkflowId id() {return new WorkflowId("test-workflow");}
+            @Override public State initialState() {return State.START;}
+            @Override public java.util.Set<State> terminatingStates() {return java.util.Set.of(State.END);}
+            @Override public Map<StateEventKey<State, Event>, TransitionResult<State>> transitionsTable() {return transitions;}
+        };
+
+        var engine = new StateMachineEngine<State, Event, Context>();
+
+        try {
+            engine.applyResult(workflowDefinition, State.END, Event.GO, new Context("test"));
+            assert false; // Should not reach here
+        } catch (IllegalStateException e) {
+            assert e.getMessage().contains("Cannot apply event to terminating state");
+        }
+    }
 }

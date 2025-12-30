@@ -5,7 +5,9 @@ public enum ValidationErrorType {
     WF_ID_IS_NULL("WF_ID_IS_NULL", "Workflow id is null."),
     WF_INITIAL_STATE_IS_NULL("WF_INITIAL_STATE_IS_NULL", "Workflow initial state is null."),
     WF_TERMINATING_STATES_IS_NULL("WF_TERMINATING_STATES_IS_NULL", "Workflow terminating states is null."),
+    WF_TERMINATING_STATE_HAS_OUTGOING_TRANSITIONS("WF_TERMINATING_STATE_HAS_OUTGOING_TRANSITIONS", "Workflow terminating state has outgoing transitions."),
     WF_TRANSITIONS_TABLE_IS_NULL("WF_TRANSITIONS_TABLE_IS_NULL", "Workflow transitions table is null.");
+
 
     private final String errorCode;
     private final String message;
