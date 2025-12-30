@@ -27,6 +27,13 @@ Clean all build outputs:
 ```
 
 ## Tests
+
+Run tests for all modules:
+
+```
+./gradlew clean test
+```
+
 Run tests for a single module:
 
 ```
