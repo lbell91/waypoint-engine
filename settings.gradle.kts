@@ -16,5 +16,6 @@ dependencyResolutionManagement {
 
 include(
     "waypoint-core",
-    "waypoint-persist"
+    "waypoint-persist",
+    "waypoint-api"
 )
