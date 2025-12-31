@@ -1,4 +1,4 @@
-package com.lbell91.core.actions;
+package com.lbell91.core.runner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -15,6 +15,7 @@ import com.lbell91.api.model.action.ActionResult;
 import com.lbell91.api.model.workflow.WorkflowId;
 import com.lbell91.core.StateMachineEngine;
 import com.lbell91.core.definition.WorkflowDefinitions;
+import com.lbell91.core.runner.WorkflowRunner;
 
 public class WorkflowRunnerStepTest {
     
