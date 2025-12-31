@@ -7,9 +7,9 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.lbell91.api.model.StateEventKey;
-import com.lbell91.api.model.TransitionResult;
-import com.lbell91.api.model.WorkflowDefinition;
-import com.lbell91.api.model.WorkflowId;
+import com.lbell91.api.model.transition.TransitionResult;
+import com.lbell91.api.model.workflow.WorkflowDefinition;
+import com.lbell91.api.model.workflow.WorkflowId;
 import com.lbell91.api.validators.WorkflowValidator;
 
 public class WorkflowDefinitions {

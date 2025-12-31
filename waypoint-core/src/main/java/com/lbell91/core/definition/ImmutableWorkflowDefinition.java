@@ -5,9 +5,9 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.lbell91.api.model.StateEventKey;
-import com.lbell91.api.model.TransitionResult;
-import com.lbell91.api.model.WorkflowDefinition;
-import com.lbell91.api.model.WorkflowId;
+import com.lbell91.api.model.transition.TransitionResult;
+import com.lbell91.api.model.workflow.WorkflowDefinition;
+import com.lbell91.api.model.workflow.WorkflowId;
 
 public class ImmutableWorkflowDefinition <S, E, C> implements WorkflowDefinition<S, E, C> {
 
@@ -20,7 +20,7 @@ public class ImmutableWorkflowDefinition <S, E, C> implements WorkflowDefinition
                                         S initialState,
                                         Set<S> terminatingStates,
                                         Map<StateEventKey<S, E>, TransitionResult<S>> transitionsTable) {
-                                            
+
         this.id = Objects.requireNonNull(id, "id");
         this.initialState = Objects.requireNonNull(initialState, "initialState");
         this.terminatingStates = Objects.requireNonNull(terminatingStates, "terminatingStates");

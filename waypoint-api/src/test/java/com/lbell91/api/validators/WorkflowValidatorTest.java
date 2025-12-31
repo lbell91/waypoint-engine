@@ -1,14 +1,17 @@
 package com.lbell91.api.validators;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
 import com.lbell91.api.model.StateEventKey;
-import com.lbell91.api.model.TransitionResult;
-import com.lbell91.api.model.WorkflowDefinition;
-import com.lbell91.api.model.WorkflowId;
+import com.lbell91.api.model.transition.TransitionResult;
+import com.lbell91.api.model.workflow.WorkflowDefinition;
+import com.lbell91.api.model.workflow.WorkflowId;
 
 public class WorkflowValidatorTest {
 
@@ -23,7 +26,7 @@ public class WorkflowValidatorTest {
     @Test
     void validate_flag_outgoing_transitions_from_terminating_states() {
         var workflowDefinition = new WorkflowDefinition<String, String, String>() {
-            @Override public WorkflowId id() {return new com.lbell91.api.model.WorkflowId("test-wf");}
+            @Override public WorkflowId id() {return new com.lbell91.api.model.workflow.WorkflowId("test-wf");}
             @Override public String initialState() {return "START";}
             @Override public Set<String> terminatingStates() {return Set.of("END");}
             @Override public Map<StateEventKey<String, String>, TransitionResult<String>> transitionsTable() {
@@ -38,5 +41,25 @@ public class WorkflowValidatorTest {
         assert !results.isValid();
         assert results.errors().stream().anyMatch(e -> e.code().equals("WF_TERMINATING_STATE_HAS_OUTGOING_TRANSITIONS"));
     }
+
+    @Test
+    void validate_valid_workflow_definition_actions() {
+        var workflowDefinition = new WorkflowDefinition<String, String, String>() {
+            @Override public WorkflowId id() {return new com.lbell91.api.model.workflow.WorkflowId("test-wf");}
+            @Override public String initialState() {return "START";}
+            @Override public Set<String> terminatingStates() {return Set.of("END");}
+            @Override public Map<StateEventKey<String, String>, TransitionResult<String>> transitionsTable() {
+                return Map.of(
+                    new StateEventKey<>("START", "GO"), new TransitionResult<>("MIDDLE"),
+                    new StateEventKey<>("MIDDLE", "GO"), new TransitionResult<>("END")
+                ); 
+            };
+        };
+        var results = WorkflowValidator.validate(workflowDefinition);
+
+        assert results.isValid();
+        assertEquals(List.of(), workflowDefinition.actionsForState("START", "ctx"));
+    }
+        
     
 }

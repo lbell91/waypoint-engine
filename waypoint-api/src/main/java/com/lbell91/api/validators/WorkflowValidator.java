@@ -1,7 +1,8 @@
 package com.lbell91.api.validators;
 
 import java.util.ArrayList;
-import com.lbell91.api.model.WorkflowDefinition;
+
+import com.lbell91.api.model.workflow.WorkflowDefinition;
 
 public final class WorkflowValidator {
 

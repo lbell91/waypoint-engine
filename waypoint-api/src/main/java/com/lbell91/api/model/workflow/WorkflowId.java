@@ -1,4 +1,4 @@
-package com.lbell91.api.model;
+package com.lbell91.api.model.workflow;
 
 public record WorkflowId(String value) {
     public WorkflowId {
