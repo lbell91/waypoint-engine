@@ -5,6 +5,7 @@ import java.util.Objects;
 import com.lbell91.api.model.StateEventKey;
 import com.lbell91.api.model.TransitionResult;
 import com.lbell91.api.model.WorkflowDefinition;
+import com.lbell91.core.exceptions.WorkflowExecutionException;
 
 public class StateMachineEngine<S, E, C> {
 
@@ -17,18 +18,13 @@ public class StateMachineEngine<S, E, C> {
         Objects.requireNonNull(event);
         
         if (workflowDefinition.terminatingStates().contains(currentState)) {
-            throw new IllegalStateException("Cannot apply event to terminating state: " + currentState);
+            throw WorkflowExecutionException.terminatingState(workflowDefinition.id(), currentState);
         }
 
         var key = new StateEventKey<>(currentState, event);
         var result = workflowDefinition.transitionsTable().get(key);
         if (result == null) {
-            throw new 
-            IllegalStateException(
-                "No transition defined for state " + 
-                currentState + 
-                " and event " + 
-                event);
+            throw WorkflowExecutionException.noTransition(workflowDefinition.id(), currentState, event);
         }
         return result;
     }

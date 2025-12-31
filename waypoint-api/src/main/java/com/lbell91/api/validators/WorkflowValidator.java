@@ -35,7 +35,7 @@ public final class WorkflowValidator {
         
     }
 
-    public static <S, E, C> void validatOrThrow(WorkflowDefinition<S, E, C> workflowDefinition) {
+    public static <S, E, C> void validateOrThrow(WorkflowDefinition<S, E, C> workflowDefinition) {
         var result = validate(workflowDefinition);
 
         if (!result.isValid()) {

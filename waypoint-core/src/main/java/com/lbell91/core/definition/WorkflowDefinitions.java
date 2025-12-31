@@ -26,8 +26,8 @@ public class WorkflowDefinitions {
         private final Map<StateEventKey<S, E>, TransitionResult<S>> transitions = new HashMap<>();   
 
         Builder(WorkflowId id, S initialState) {
-            this.id = id;
-            this.initialState = initialState;
+            this.id = Objects.requireNonNull(id, "id");
+            this.initialState = Objects.requireNonNull(initialState, "initialState");
         }
 
         public Builder<S, E, C> terminating(S state) {
@@ -90,7 +90,7 @@ public class WorkflowDefinitions {
         public WorkflowDefinition<S, E, C> build() {
             var definition = new ImmutableWorkflowDefinition<S, E, C>(id, initialState, terminatingStates, transitions);
 
-            WorkflowValidator.validatOrThrow(definition);
+            WorkflowValidator.validateOrThrow(definition);
 
             return definition;
         }
