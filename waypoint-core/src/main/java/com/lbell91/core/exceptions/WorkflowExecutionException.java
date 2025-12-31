@@ -3,6 +3,8 @@ package com.lbell91.core.exceptions;
 import com.lbell91.api.model.WorkflowId;
 
 public class WorkflowExecutionException extends IllegalStateException {
+    private static final long serialVersionUID = 1L;
+    
     public WorkflowExecutionException(String message) {
         super(message);
     }
