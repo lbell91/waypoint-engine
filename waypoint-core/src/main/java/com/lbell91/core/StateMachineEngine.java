@@ -5,7 +5,6 @@ import java.util.Objects;
 import com.lbell91.api.model.StateEventKey;
 import com.lbell91.api.model.TransitionResult;
 import com.lbell91.api.model.WorkflowDefinition;
-import com.lbell91.api.validators.WorkflowValidator;
 
 public class StateMachineEngine<S, E, C> {
 
@@ -13,8 +12,6 @@ public class StateMachineEngine<S, E, C> {
                                            S currentState,
                                            E event,
                                            C context) {
-        WorkflowValidator.validatOrThrow(workflowDefinition);
-
         Objects.requireNonNull(workflowDefinition);
         Objects.requireNonNull(currentState);
         Objects.requireNonNull(event);

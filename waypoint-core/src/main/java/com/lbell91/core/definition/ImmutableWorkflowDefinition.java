@@ -1,6 +1,7 @@
 package com.lbell91.core.definition;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import com.lbell91.api.model.StateEventKey;
@@ -19,10 +20,11 @@ public class ImmutableWorkflowDefinition <S, E, C> implements WorkflowDefinition
                                         S initialState,
                                         Set<S> terminatingStates,
                                         Map<StateEventKey<S, E>, TransitionResult<S>> transitionsTable) {
-        this.id = id;
-        this.initialState = initialState;
-        this.terminatingStates = terminatingStates;
-        this.transitionsTable = transitionsTable;
+                                            
+        this.id = Objects.requireNonNull(id, "id");
+        this.initialState = Objects.requireNonNull(initialState, "initialState");
+        this.terminatingStates = Objects.requireNonNull(terminatingStates, "terminatingStates");
+        this.transitionsTable = Objects.requireNonNull(transitionsTable, "transitionsTable");
     }
 
 
