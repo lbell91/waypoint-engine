@@ -1,12 +1,15 @@
 package com.lbell91.core.definition;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 import com.lbell91.api.model.StateEventKey;
+import com.lbell91.api.model.action.ActionCommand;
 import com.lbell91.api.model.transition.TransitionResult;
 import com.lbell91.api.model.workflow.WorkflowDefinition;
 import com.lbell91.api.model.workflow.WorkflowId;
@@ -24,10 +27,21 @@ public class WorkflowDefinitions {
         private final S initialState;
         private final Set<S> terminatingStates = new HashSet<>();
         private final Map<StateEventKey<S, E>, TransitionResult<S>> transitions = new HashMap<>();   
+        private final Map<S, List<ActionCommand<C>>> actionsByState = new HashMap<>();
 
         Builder(WorkflowId id, S initialState) {
             this.id = Objects.requireNonNull(id, "id");
             this.initialState = Objects.requireNonNull(initialState, "initialState");
+        }
+
+        public Builder<S, E, C> onEntry(S state, ActionCommand<C> action) {
+            Objects.requireNonNull(state, "state");
+            Objects.requireNonNull(action, "action");
+
+            actionsByState.computeIfAbsent(state, k -> new ArrayList<>()).add(action);
+            
+
+            return this;
         }
 
         public Builder<S, E, C> terminating(S state) {
@@ -88,7 +102,7 @@ public class WorkflowDefinitions {
         }
 
         public WorkflowDefinition<S, E, C> build() {
-            var definition = new ImmutableWorkflowDefinition<S, E, C>(id, initialState, terminatingStates, transitions);
+            var definition = new ImmutableWorkflowDefinition<S, E, C>(id, initialState, terminatingStates, transitions, actionsByState);
 
             WorkflowValidator.validateOrThrow(definition);
 
