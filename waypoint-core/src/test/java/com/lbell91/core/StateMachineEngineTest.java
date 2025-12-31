@@ -1,13 +1,9 @@
 package com.lbell91.core;
 
-import java.util.Map;
 import java.util.Objects;
 
 import org.junit.jupiter.api.Test;
 
-import com.lbell91.api.model.StateEventKey;
-import com.lbell91.api.model.transition.TransitionResult;
-import com.lbell91.api.model.workflow.WorkflowDefinition;
 import com.lbell91.api.model.workflow.WorkflowId;
 import com.lbell91.core.definition.WorkflowDefinitions;
 
@@ -26,7 +22,6 @@ public class StateMachineEngineTest {
     record Context(String info) {
     }
 
-    // Simple key class to represent state-event pairs for a transition table
     record Key(State state, Event event) {
         Key {
             Objects.requireNonNull(state);

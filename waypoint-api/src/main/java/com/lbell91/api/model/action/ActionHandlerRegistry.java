@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.lbell91.api.exceptions.ApiIllegalStateException;
+
 public class ActionHandlerRegistry<C>{
     
     private final Map<ActionId, ActionHandler<C>> handlers = new HashMap<>();
@@ -14,7 +16,7 @@ public class ActionHandlerRegistry<C>{
 
         var previous = handlers.putIfAbsent(actionId, handler);
         if (previous != null) {
-            throw new IllegalStateException("Handler already registered for actionId " + actionId);
+            throw ApiIllegalStateException.actionHandlerAlreadyRegistered(actionId.toString());
         }
         return this;
     }
@@ -23,7 +25,7 @@ public class ActionHandlerRegistry<C>{
         Objects.requireNonNull(actionId, "actionId");
         var handler = handlers.get(actionId);
         if (handler == null) {
-            throw new IllegalStateException("No handler registered for actionId " + actionId);
+            throw ApiIllegalStateException.actionHandlerNotFound(actionId.toString());
         }
         return handler;
     }

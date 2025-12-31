@@ -1,9 +1,11 @@
 package com.lbell91.api.model.workflow;
 
+import com.lbell91.api.exceptions.ApiIllegalArgumentException;
+
 public record WorkflowId(String value) {
     public WorkflowId {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("WorkflowId cannot be null or blank");
+            throw ApiIllegalArgumentException.workflowIdRequired();
         }
     }
 

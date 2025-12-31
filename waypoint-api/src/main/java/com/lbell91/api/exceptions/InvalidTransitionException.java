@@ -1,4 +1,4 @@
-package com.lbell91.api.model.exceptions;
+package com.lbell91.api.exceptions;
 
 public class InvalidTransitionException {
     

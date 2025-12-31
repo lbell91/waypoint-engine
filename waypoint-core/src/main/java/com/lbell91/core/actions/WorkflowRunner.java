@@ -2,13 +2,13 @@ package com.lbell91.core.actions;
 
 import java.util.Objects;
 
-import javax.swing.Action;
-
 import com.lbell91.api.model.action.ActionCompleted;
 import com.lbell91.api.model.action.ActionEvent;
 import com.lbell91.api.model.action.ActionHandlerRegistry;
 import com.lbell91.api.model.workflow.WorkflowDefinition;
 import com.lbell91.core.StateMachineEngine;
+import com.lbell91.core.exceptions.CoreIllegalArgumentException;
+import com.lbell91.core.exceptions.CoreIllegalStateException;
 
 public class WorkflowRunner<S, C> {
 
@@ -27,7 +27,7 @@ public class WorkflowRunner<S, C> {
         this.engine = Objects.requireNonNull(engine, "engine");
         this.handlers = Objects.requireNonNull(handlers, "handlers");
         if (maxSteps <= 0) {
-            throw new IllegalArgumentException("maxSteps must be positive");
+            throw CoreIllegalArgumentException.maxStepsIllegalArgument(maxSteps);
         }
         this.maxSteps = maxSteps;
     }
@@ -41,13 +41,13 @@ public class WorkflowRunner<S, C> {
 
         while (!workflowDefinition.terminatingStates().contains(currentState)) {
             if (++steps > maxSteps) {
-                throw new IllegalStateException("Max steps exceeded");
+                throw CoreIllegalStateException.maxStepsExceeded(maxSteps, workflowDefinition.id().toString());
             }
 
             var actions = workflowDefinition.actionsForState(currentState, context);
 
             if (actions.isEmpty()) {
-                throw new IllegalStateException("No actions defined for state " + currentState);
+                throw CoreIllegalStateException.noActionsForNonTerminatingState(currentState.toString(), workflowDefinition.id().toString());
             }
 
             for (var action : actions) {

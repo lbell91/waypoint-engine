@@ -2,6 +2,7 @@ package com.lbell91.api.validators;
 
 import java.util.ArrayList;
 
+import com.lbell91.api.exceptions.ApiIllegalArgumentException;
 import com.lbell91.api.model.workflow.WorkflowDefinition;
 
 public final class WorkflowValidator {
@@ -40,7 +41,12 @@ public final class WorkflowValidator {
         var result = validate(workflowDefinition);
 
         if (!result.isValid()) {
-            throw new IllegalArgumentException("Invalid workflow definition " + result.errors());
+            throw ApiIllegalArgumentException.workflowInvalidDefinition(
+                result.errors().stream()
+                    .map(ValidationError::message)
+                    .reduce((a, b) -> a + "; " + b)
+                    .orElse("Unknown validation error")
+            );
         }
     }
 

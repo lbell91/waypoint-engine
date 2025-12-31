@@ -14,6 +14,7 @@ import com.lbell91.api.model.transition.TransitionResult;
 import com.lbell91.api.model.workflow.WorkflowDefinition;
 import com.lbell91.api.model.workflow.WorkflowId;
 import com.lbell91.api.validators.WorkflowValidator;
+import com.lbell91.core.exceptions.CoreIllegalStateException;
 
 public class WorkflowDefinitions {
 
@@ -58,11 +59,7 @@ public class WorkflowDefinitions {
             var previous = transitions.putIfAbsent(key, new TransitionResult<>(to));
 
             if (previous != null) {
-                throw new IllegalStateException(
-                    "Transition already defined for state " + 
-                    from + 
-                    " and event " + 
-                    event);
+                throw CoreIllegalStateException.transitionDefined(from, event);
             }
 
 
