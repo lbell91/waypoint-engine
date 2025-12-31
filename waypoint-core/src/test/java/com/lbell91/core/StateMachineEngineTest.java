@@ -9,6 +9,7 @@ import com.lbell91.api.model.StateEventKey;
 import com.lbell91.api.model.TransitionResult;
 import com.lbell91.api.model.WorkflowDefinition;
 import com.lbell91.api.model.WorkflowId;
+import com.lbell91.core.definition.WorkflowDefinitions;
 
 public class StateMachineEngineTest {
     enum State {
@@ -36,17 +37,11 @@ public class StateMachineEngineTest {
 
     @Test
     void apply_valid_event_should_transition_state() {
-        var transitions = Map.of(
-            new StateEventKey<>(State.START, Event.GO), new TransitionResult<>(State.MIDDLE),
-            new StateEventKey<>(State.MIDDLE, Event.GO), new TransitionResult<>(State.END)
-        );
-
-        var workflowDefinition = new WorkflowDefinition<State,Event,Context>() {
-            @Override public WorkflowId id() {return new WorkflowId("test-workflow");}
-            @Override public State initialState() {return State.START;}
-            @Override public java.util.Set<State> terminatingStates() {return java.util.Set.of(State.END);}
-            @Override public Map<StateEventKey<State, Event>, TransitionResult<State>> transitionsTable() {return transitions;}
-        };
+        var workflowDefinition = WorkflowDefinitions.<State,Event,Context>builder(new WorkflowId("test-workflow"), State.START)
+            .terminating(State.END)
+            .transition(State.START, Event.GO, State.MIDDLE)
+            .transition(State.MIDDLE, Event.GO, State.END)
+            .build();
 
         var engine = new StateMachineEngine<State, Event, Context>();
 
@@ -56,22 +51,17 @@ public class StateMachineEngineTest {
 
     @Test
     void apply_event_on_terminating_state_should_throw() {
-        var transitions = Map.of(
-            new StateEventKey<>(State.START, Event.GO), new TransitionResult<>(State.MIDDLE),
-            new StateEventKey<>(State.MIDDLE, Event.GO), new TransitionResult<>(State.END)
-        );
-        var workflowDefinition = new WorkflowDefinition<State,Event,Context>() {
-            @Override public WorkflowId id() {return new WorkflowId("test-workflow");}
-            @Override public State initialState() {return State.START;}
-            @Override public java.util.Set<State> terminatingStates() {return java.util.Set.of(State.END);}
-            @Override public Map<StateEventKey<State, Event>, TransitionResult<State>> transitionsTable() {return transitions;}
-        };
+        var workflowDefinition = WorkflowDefinitions.<State,Event,Context>builder(new WorkflowId("test-workflow"), State.START)
+            .terminating(State.END)
+            .transition(State.START, Event.GO, State.MIDDLE)
+            .transition(State.MIDDLE, Event.GO, State.END)
+            .build();
 
         var engine = new StateMachineEngine<State, Event, Context>();
 
         try {
             engine.applyResult(workflowDefinition, State.END, Event.GO, new Context("test"));
-            assert false; // Should not reach here
+            assert false;
         } catch (IllegalStateException e) {
             assert e.getMessage().contains("Cannot apply event to terminating state");
         }

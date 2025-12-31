@@ -1,0 +1,49 @@
+package com.lbell91.core.definition;
+
+import java.util.Map;
+import java.util.Set;
+
+import com.lbell91.api.model.StateEventKey;
+import com.lbell91.api.model.TransitionResult;
+import com.lbell91.api.model.WorkflowDefinition;
+import com.lbell91.api.model.WorkflowId;
+
+public class ImmutableWorkflowDefinition <S, E, C> implements WorkflowDefinition<S, E, C> {
+
+    private final WorkflowId id;
+    private final S initialState;
+    private final Set<S> terminatingStates;
+    private final Map<StateEventKey<S, E>, TransitionResult<S>> transitionsTable;
+
+    public ImmutableWorkflowDefinition(WorkflowId id,
+                                        S initialState,
+                                        Set<S> terminatingStates,
+                                        Map<StateEventKey<S, E>, TransitionResult<S>> transitionsTable) {
+        this.id = id;
+        this.initialState = initialState;
+        this.terminatingStates = terminatingStates;
+        this.transitionsTable = transitionsTable;
+    }
+
+
+	@Override
+	public WorkflowId id() {
+		return this.id;
+	}
+
+	@Override
+	public S initialState() {
+		return this.initialState;
+	}
+
+	@Override
+	public Set<S> terminatingStates() {
+		return this.terminatingStates;
+	}
+
+	@Override
+	public Map<StateEventKey<S, E>, TransitionResult<S>> transitionsTable() {
+		return this.transitionsTable;
+	}
+
+}
