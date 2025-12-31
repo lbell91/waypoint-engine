@@ -3,6 +3,8 @@ package com.lbell91.api.exceptions;
 import com.lbell91.api.exceptions.messages.ActionExceptionMessages;
 
 public class ApiIllegalStateException extends IllegalStateException {
+    private static final long serialVersionUID = 1L;
+    
     public ApiIllegalStateException(String message) {
         super(message);
     }

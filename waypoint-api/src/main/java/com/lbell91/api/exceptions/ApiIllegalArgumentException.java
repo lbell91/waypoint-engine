@@ -4,6 +4,8 @@ import com.lbell91.api.exceptions.messages.ActionExceptionMessages;
 import com.lbell91.api.exceptions.messages.WorkflowExceptionMessages;
 
 public class ApiIllegalArgumentException extends IllegalArgumentException {
+    private static final long serialVersionUID = 1L;
+    
     public ApiIllegalArgumentException(String message) {
         super(message);
     }

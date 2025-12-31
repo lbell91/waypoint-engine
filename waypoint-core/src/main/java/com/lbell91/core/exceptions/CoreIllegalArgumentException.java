@@ -3,6 +3,7 @@ package com.lbell91.core.exceptions;
 import com.lbell91.core.exceptions.messages.WorkflowRunnerMessages;
 
 public class CoreIllegalArgumentException extends IllegalArgumentException {
+    private static final long serialVersionUID = 1L;
 
     public CoreIllegalArgumentException(String message) {
         super(message);
