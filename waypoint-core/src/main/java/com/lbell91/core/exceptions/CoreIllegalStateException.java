@@ -11,6 +11,12 @@ public class CoreIllegalStateException extends IllegalStateException {
         super(message);
     }
 
+    public static CoreIllegalArgumentException actionNotDefinedForState(String actionId, String state, String workflowId) {
+        return new CoreIllegalArgumentException(
+                String.format(WorkflowExecutionMessages.ACTION_NOT_DEFINED_FOR_STATE, actionId, state, workflowId)
+        );
+    }
+
     public static CoreIllegalStateException terminatingState(WorkflowId workflowId, Object state) {
         return new CoreIllegalStateException(WorkflowExecutionMessages.TERMINATING_STATE.formatted(state, workflowId));
     }

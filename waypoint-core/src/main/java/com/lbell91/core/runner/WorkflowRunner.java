@@ -3,6 +3,8 @@ package com.lbell91.core.runner;
 import java.util.List;
 import java.util.Objects;
 
+import javax.swing.Action;
+
 import com.lbell91.api.model.action.ActionCommand;
 import com.lbell91.api.model.action.ActionCompleted;
 import com.lbell91.api.model.action.ActionEvent;
@@ -56,12 +58,15 @@ public class WorkflowRunner<S, C> {
     }
 
     public RunStepResult<S, C> runStep(WorkflowDefinition<S, ActionEvent, C> workflowDefinition,
-                                        S currentState,
-                                        C context) {
+                                       S currentState,
+                                       C context,
+                                       ActionCommand<C> actionToExecute,
+                                       int stepIndex) {
         Objects.requireNonNull(workflowDefinition, "workflowDefinition");
         Objects.requireNonNull(currentState, "currentState");
-        
-        return runStepInternal(workflowDefinition, currentState, context, 0);
+        Objects.requireNonNull(actionToExecute, "actionToExecute");
+
+        return runStepInternal(workflowDefinition, currentState, context, actionToExecute, stepIndex);
     }
 
     public S runToCompletion(WorkflowDefinition<S, ActionEvent, C> workflowDefinition, C context) {
@@ -69,29 +74,49 @@ public class WorkflowRunner<S, C> {
 
         S currentState = workflowDefinition.initialState();
         int steps = 0;
-            while (!workflowDefinition.terminatingStates().contains(currentState)) {
-                if (++steps > maxSteps) {
-                    RuntimeException ex = CoreIllegalStateException.maxStepsExceeded(maxSteps, workflowDefinition.id().toString());
-                    observer.onFailure(workflowDefinition.id(), steps, currentState, ex);
-                    throw ex;
-                }
 
-                RunStepResult<S, C> step = runStepInternal(workflowDefinition, currentState, context, steps);
-                currentState = step.toState();
+        while (!workflowDefinition.terminatingStates().contains(currentState)) {
+            if (++steps > maxSteps) {
+                RuntimeException ex = CoreIllegalStateException.maxStepsExceeded(maxSteps, workflowDefinition.id().toString());
+                observer.onFailure(workflowDefinition.id(), steps, currentState, ex);
+                throw ex;
             }
 
-            observer.onCompleted(workflowDefinition.id(), currentState, steps);
+            var actions = workflowDefinition.actionsForState(currentState, context);
 
-            return currentState;
-        
+            if (actions == null || actions.isEmpty()) {
+                RuntimeException ex = CoreIllegalStateException.noActionsForNonTerminatingState(
+                        currentState.toString(),
+                        workflowDefinition.id().toString()
+                );
+                observer.onFailure(workflowDefinition.id(), steps, currentState, ex);
+                throw ex;
+            }
+
+            if (actions.size() != 1) {
+                // Don't guess. This method is only for "automatic" workflows.
+                RuntimeException ex = new IllegalStateException(
+                        "Cannot auto-run: multiple actions available. workflowId=" + workflowDefinition.id()
+                                + ", state=" + currentState
+                                + ", actionCount=" + actions.size()
+                );
+                observer.onFailure(workflowDefinition.id(), steps, currentState, ex);
+                throw ex;
+            }
+
+            var step = runStepInternal(workflowDefinition, currentState, context, actions.get(0), steps);
+            currentState = step.toState();
+        }
+
+        observer.onCompleted(workflowDefinition.id(), currentState, steps);
+        return currentState;
     }
 
-    
-
     private RunStepResult<S, C> runStepInternal(WorkflowDefinition<S, ActionEvent, C> workflowDefinition,
-                                               S currentState,
-                                               C context,
-                                               int stepIndex) {
+                                                S currentState,
+                                                C context,
+                                                ActionCommand<C> actionToExecute,
+                                                int stepIndex) {
         try {
             observer.onStepStart(workflowDefinition.id(), stepIndex, currentState, context);
 
@@ -102,27 +127,64 @@ public class WorkflowRunner<S, C> {
             var actions = workflowDefinition.actionsForState(currentState, context);
 
             if (actions == null || actions.isEmpty()) {
-                throw CoreIllegalStateException.noActionsForNonTerminatingState(currentState.toString(), workflowDefinition.id().toString());
+                throw CoreIllegalStateException.noActionsForNonTerminatingState(
+                        currentState.toString(),
+                        workflowDefinition.id().toString()
+                );
             }
 
-            ActionCommand<C> action = actions.get(0);
-            observer.onActionPlanned(action);
+            if (!actions.contains(actionToExecute)) {
+                throw CoreIllegalStateException.actionNotDefinedForState(
+                        actionToExecute.actionId().toString(),
+                        currentState.toString(),
+                        workflowDefinition.id().toString()
+                );
+            }
 
-            var handler = handlers.get(action.actionId());
+            observer.onActionPlanned(actionToExecute);
 
-            ActionResult result = handler.handle(action, context);
-            ActionEvent event = new ActionCompleted(action.actionId(), result);
-            observer.onActionExecuted(action, event);
+            var handler = handlers.get(actionToExecute.actionId());
+
+            ActionResult result = handler.handle(actionToExecute, context);
+            ActionEvent event = new ActionCompleted(actionToExecute.actionId(), result);
+            observer.onActionExecuted(actionToExecute, event);
 
             var transition = engine.applyResult(workflowDefinition, currentState, event, context);
             S nextState = transition.nextState();
             observer.onTransitionApplied(currentState, nextState, event);
 
-            return new RunStepResult<>(currentState, nextState, action, event);
+            return new RunStepResult<>(currentState, nextState, actionToExecute, event);
         } catch (RuntimeException ex) {
             observer.onFailure(workflowDefinition.id(), stepIndex, currentState, ex);
             throw ex;
         }
     }
-    
+
+    public List<ActionCommand<C>> getAvailableActions(WorkflowDefinition<S, ActionEvent, C> workflowDefinition,
+                                                            WorkflowInstance<S, C> instance) {
+        Objects.requireNonNull(workflowDefinition, "workflowDefinition");
+        Objects.requireNonNull(instance, "instance");
+
+        return workflowDefinition.actionsForState(instance.currentState(), instance.context());
+    }
+
+    public RunStepResult<S, C> runStep(WorkflowDefinition<S, ActionEvent, C> workflowDefinition,
+                                       WorkflowInstance<S, C> instance,
+                                       ActionCommand<C> actionToExecute) {
+        Objects.requireNonNull(workflowDefinition, "workflowDefinition");
+        Objects.requireNonNull(instance, "instance");
+        Objects.requireNonNull(actionToExecute, "actionToExecute");
+        
+        int nextStepIndex = instance.stepIndex() + 1;
+
+        RunStepResult<S, C> step = runStep(
+                workflowDefinition,
+                instance.currentState(),
+                instance.context(),
+                actionToExecute,
+                nextStepIndex
+        );
+
+        return step;
+    }
 }

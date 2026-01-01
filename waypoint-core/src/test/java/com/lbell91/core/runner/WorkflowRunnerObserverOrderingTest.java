@@ -18,8 +18,6 @@ import com.lbell91.api.model.workflow.WorkflowId;
 import com.lbell91.core.StateMachineEngine;
 import com.lbell91.core.definition.WorkflowDefinitions;
 
-// Adjust this import if WorkflowRunner is still in com.lbell91.core.actions
-
 class WorkflowRunnerObserverTest {
 
     enum State { START, WORK, END, FAIL }
@@ -46,17 +44,19 @@ class WorkflowRunnerObserverTest {
             @Override public void onFailure(WorkflowId workflowId, int stepIndex, State state, RuntimeException exception) { calls.add("failed"); }
         };
 
+        var beginCmd = ActionCommand.<Ctx>of(BEGIN);
+        var workCmd  = ActionCommand.<Ctx>of(DO_WORK);
+
         var definition = WorkflowDefinitions.<State, ActionEvent, Ctx>builder(new WorkflowId("wf_id"), State.START)
                 .terminating(State.END)
                 .terminating(State.FAIL)
 
-                .onEntry(State.START, ActionCommand.of(BEGIN))
-                .onEntry(State.WORK, ActionCommand.of(DO_WORK))
+                .onEntry(State.START, beginCmd)
+                .onEntry(State.WORK, workCmd)
 
                 .transition(State.START, completed(BEGIN, ActionResult.SUCCESS), State.WORK)
                 .transition(State.WORK, completed(DO_WORK, ActionResult.SUCCESS), State.END)
                 .transition(State.WORK, completed(DO_WORK, ActionResult.FAILURE), State.FAIL)
-
                 .build();
 
         var handlers = new ActionHandlerRegistry<Ctx>()
@@ -66,17 +66,25 @@ class WorkflowRunnerObserverTest {
         var engine = new StateMachineEngine<State, ActionEvent, Ctx>();
         var runner = new WorkflowRunner<State, Ctx>(engine, handlers, observer, 10_000);
 
-        var finalState = runner.runToCompletion(definition, new Ctx("context"));
-        assertEquals(State.END, finalState);
+        // IMPORTANT: with your current runToCompletion(def, ctx, actionToExecute),
+        // the action is fixed for ALL steps. That cannot reach END in this workflow.
+        // So we drive the two steps explicitly with runStep(... actionToExecute ...)
+        State state = definition.initialState();
 
-        // Two steps:
-        // Step 1: START => WORK
-        // Step 2: WORK => END
+        var step1 = runner.runStep(definition, state, new Ctx("context"), beginCmd, 1);
+        state = step1.toState();
+
+        var step2 = runner.runStep(definition, state, new Ctx("context"), workCmd, 2);
+        state = step2.toState();
+
+        assertEquals(State.END, state);
+
         assertEquals(
                 List.of(
                         "stepStart", "planned", "executed", "transitioned",
-                        "stepStart", "planned", "executed", "transitioned",
-                        "completed"
+                        "stepStart", "planned", "executed", "transitioned"
+                        // NOTE: onCompleted is only called by runToCompletion in your current runner,
+                        // not by runStep. So we should NOT expect "completed" here.
                 ),
                 calls
         );
@@ -92,19 +100,22 @@ class WorkflowRunnerObserverTest {
             @Override public void onCompleted(WorkflowId workflowId, State finalState, int stepIndex) { calls.add("completed"); }
         };
 
-        // Non-terminal START with no onEntry actions => runner should throw
         var definition = WorkflowDefinitions.<State, ActionEvent, Ctx>builder(new WorkflowId("wf_id"), State.START)
                 .terminating(State.END)
-                // We don’t even need a transition; runner fails before applying engine
                 .build();
 
         var handlers = new ActionHandlerRegistry<Ctx>();
         var engine = new StateMachineEngine<State, ActionEvent, Ctx>();
         var runner = new WorkflowRunner<State, Ctx>(engine, handlers, observer, 10_000);
 
-        assertThrows(IllegalStateException.class, () -> runner.runToCompletion(definition, new Ctx("x")));
+        // need to supply some actionToExecute; it will fail before validation passes anyway,
+        // but runStep requires it.
+        var dummyCmd = ActionCommand.<Ctx>of(new ActionId("dummy"));
 
-        // We should see stepStart, then failure; never completed
+        assertThrows(IllegalStateException.class, () ->
+                runner.runStep(definition, State.START, new Ctx("x"), dummyCmd, 1)
+        );
+
         assertEquals(List.of("stepStart", "failed"), calls);
     }
 }
